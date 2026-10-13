@@ -1,0 +1,13 @@
+.DS_Store
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.*
+*.pem
+*.key
+/evidence/
+/maintainer/
+/VERIFICATION.md
+*.checks.json
+/browser-evidence/

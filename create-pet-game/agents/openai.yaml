@@ -1,0 +1,4 @@
+interface:
+  display_name: "桌宠 HTML 游戏制作"
+  short_description: "按玩法需求制作可导入桌宠、能邀请好友局域网联机的单文件游戏"
+  default_prompt: "使用 $create-pet-game 按我的想法制作一个能导入桌宠、和好友局域网联机的 HTML 小游戏。"

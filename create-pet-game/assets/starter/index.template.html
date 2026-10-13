@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script id="pet-sdk" type="application/json">__PET_SDK__</script>
+<title>__TITLE__</title><style>__STYLE__</style></head>
+<body><main>
+  <header><p class="eyebrow">PET PLAY · 双人小游戏</p><h1>__TITLE__</h1><p>__DESCRIPTION__</p></header>
+  <p id="connection" role="status">正在检查运行环境…</p>
+  <section class="players"><div><img id="portrait-self" alt="我的桌宠" hidden><span id="self-name">你</span></div><div><img id="portrait-peer" alt="对方桌宠" hidden><span id="peer-name">等待好友</span></div></section>
+  <p id="portrait-note" class="hint">尚未读取角色，暂用玩家色块。</p>
+  <canvas id="game" width="800" height="400" tabindex="0" aria-label="游戏区域"></canvas>
+  <p id="status" role="status"></p><p id="error" role="alert" hidden></p>
+  <nav><button id="ready">我准备好了</button><button id="action" disabled>行动 · 空格</button><button id="preview-peer" hidden>预览另一方 · Enter</button><button id="leave" class="quiet">离开</button></nav>
+  <p class="hint" id="help">技术示例：双方准备后，按按钮或空格，先到 5 分者获胜。用你的玩法替换此示例。</p>
+  <p class="hint" id="preview-help" hidden>这是本地预览。通过桌宠发送同一份 HTML，选择“发送并一起玩”，接受邀请后才进入真正的双人对局。</p>
+</main><script>__PET_BRIDGE__</script><script>__GAME_CODE__</script></body></html>

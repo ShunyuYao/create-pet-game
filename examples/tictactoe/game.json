@@ -1,0 +1,12 @@
+{
+  "title": "桌宠井字棋",
+  "description": "双人局域网井字棋：三子连线获胜，双方确认再开。",
+  "protocol": {
+    "id": "pet-tictactoe",
+    "version": 1
+  },
+  "permissions": [
+    "character:read",
+    "sessions:connect"
+  ]
+}

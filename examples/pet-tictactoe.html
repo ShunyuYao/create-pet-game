@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script id="pet-sdk" type="application/json">{"version":2,"permissions":["character:read","sessions:connect"],"network":[],"interaction":{"players":2,"transport":"lan","protocol":{"id":"pet-tictactoe","version":1}}}</script><title>桌宠井字棋</title><style>*{box-sizing:border-box}body{margin:0;background:#edf1e9;color:#223d35;font:15px/1.6 system-ui,'Microsoft YaHei',sans-serif}main{max-width:660px;margin:24px auto;padding:28px 40px;background:#fffdf6;border:1px solid #d9dfd1;border-radius:28px;box-shadow:0 16px 60px #3449370c}header{text-align:center}h1{font-size:32px;letter-spacing:3px;margin:2px 0}header p{margin:0;color:#6b796a}.eyebrow{font-size:11px;letter-spacing:3px;color:#7c8875}#connection{text-align:center;font-size:12px;padding:8px;background:#eaf0e5;border-radius:20px}.players{display:flex;gap:16px;margin-top:18px}.players article{flex:1;display:grid;grid-template-columns:58px 1fr;align-items:center;column-gap:12px;padding:12px;border:2px solid #e9ebdf;border-radius:18px;transition:border-color .2s}.players article.active{border-color:#70866a}.avatar{grid-row:1/3;height:58px;width:58px;border-radius:15px;background:#e4ecdf;display:grid;place-items:center;font-size:44px;line-height:1}.avatar img{width:56px;height:56px;object-fit:contain}.players strong{overflow-wrap:anywhere}.players article:nth-child(2) .avatar{color:#b77643;background:#f7e8d5}.players button{grid-column:1/3;margin-top:10px}#status{text-align:center;font-size:21px;margin:20px 0 14px}#board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:342px;margin:auto}.cell{aspect-ratio:1;border:1px solid #d8dfd1;background:#f0f3e9;border-radius:17px;padding:0;font-size:64px;line-height:1;color:#476957}.cell[data-player='1']{color:#b77643}.cell:disabled{opacity:1;cursor:default}.cell.win{background:#d5e5c8;border:2px solid #7b995f}.cell:not(:disabled):hover{background:#e1ead8;transform:translateY(-1px)}button{border:0;border-radius:10px;padding:9px 12px;font:inherit;background:#446a56;color:white;cursor:pointer}button:disabled{opacity:.5;cursor:default}button:focus-visible{outline:3px solid #d08b36;outline-offset:3px}#detail{text-align:center;font-size:13px;color:#647261;min-height:22px}footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;font-size:11px;color:#79816f}.quiet{background:#e9ecdf;color:#47604b;font-size:12px}.hint{font-size:11px;color:#7b8273;margin-bottom:0}#error{color:#a34137;font-size:13px}[hidden]{display:none!important}@media(max-width:540px){main{margin:8px;padding:20px 16px}.players{gap:8px}.players article{padding:8px;column-gap:8px;grid-template-columns:44px 1fr}.avatar,.avatar img{width:44px;height:44px}.players strong{font-size:13px}h1{font-size:27px}#board{max-width:310px}}
+</style></head>
+<body><main><header><span class="eyebrow">桌宠游戏室 / 01</span><h1>桌宠井字棋</h1><p>双人局域网井字棋：三子连线获胜，双方确认再开。</p></header>
+<p id="connection" role="status">正在检查运行环境…</p>
+<section class="players" aria-label="对局双方">
+<article id="player-0"><div class="avatar"><span id="fallback-0">×</span><img id="portrait-0" alt="玩家一桌宠头像" hidden></div><strong id="name-0">玩家一</strong><span id="mark-0">×</span><button id="ready-0">准备开始</button></article>
+<article id="player-1"><div class="avatar"><span id="fallback-1">○</span><img id="portrait-1" alt="玩家二桌宠头像" hidden></div><strong id="name-1">玩家二</strong><span id="mark-1">○</span><button id="ready-1">准备开始</button></article>
+</section><p id="portrait-note" class="hint"></p>
+<h2 id="status" role="status"></h2><div id="board" role="group" aria-label="三乘三井字棋棋盘"></div><p id="detail"></p>
+<p id="error" role="alert" hidden></p><footer><span>点击空格落子 · Tab 和 Enter 也可操作</span><button id="leave" class="quiet">离开对局</button></footer>
+<p id="preview-help" class="hint">当前为本地预览。将 HTML 导入桌宠，通过「发送并一起玩」邀请同网好友；双方接受邀请与授权后进入联机。</p>
+</main><script>/* MIT — create-pet-game contributors. Standalone HTML/work SDK adapter. */
+(function (root, factory) {
+  const api = factory(root);
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.PetGameBridge = api;
+})(globalThis, function (root) {
+  'use strict';
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const bytes = value => new TextEncoder().encode(JSON.stringify(value)).length;
+  const token = value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/.test(value);
+  function create(options = {}) {
+    const sdk = options.sdk || root.pet;
+    let context = null, mode = 'preview', status = 'idle', cursor = 0, epoch = 0;
+    let disposed = false, started = false, connecting, timer, flushing = false, nextSend = 0;
+    const queued = new Map();
+    const snapshot = () => ({ mode, status, role: context?.role || 'host', peer: context?.peer || null, epoch });
+    const report = error => { try { options.onError?.(error instanceof Error ? error : Error(String(error))); } catch {} };
+    async function call(name, ...args) { try { return await options[name]?.(...args); } catch (error) { report(error); } }
+    function setStatus(next) { if (status === next) return; status = next; void call('onStatus', snapshot()); }
+    function assertMessage(type, payload, limit) {
+      if (!token(type) || payload === undefined) throw Error('invalid_game_message');
+      if (bytes({ type, payload }) > limit) throw Error('game_message_too_large');
+    }
+    function schedule() {
+      clearTimeout(timer);
+      if (disposed || !queued.size || status !== 'connected' || flushing) return;
+      timer = setTimeout(flush, Math.max(0, nextSend - Date.now()));
+    }
+    async function flush() {
+      if (disposed || status !== 'connected' || flushing) return;
+      const entry = queued.entries().next().value; if (!entry) return;
+      const [key, message] = entry; queued.delete(key); flushing = true;
+      nextSend = Date.now() + Math.max(50, Math.ceil(bytes(message) / 131072 * 1000));
+      try { await sdk.sessions.send(message); } catch (error) { report(error); }
+      finally { flushing = false; schedule(); }
+    }
+    // Enqueue/coalesce an input or snapshot. This is not a delivery receipt.
+    function latest(key, type, payload) {
+      if (disposed) throw Error('session_closed');
+      if (mode !== 'session') return false;
+      if (!token(key) || (queued.size >= 6 && !queued.has(key))) throw Error('too_many_game_channels');
+      assertMessage(type, payload, 48 * 1024);
+      queued.set(key, { lane: 'latest', key, type, payload: JSON.parse(JSON.stringify(payload)) });
+      schedule(); return true;
+    }
+    async function resync() {
+      if (disposed || status !== 'connected') return;
+      latest('bridge-sync', 'bridge.resync', { epoch });
+      await call('onResync', snapshot());
+    }
+    async function event(e) {
+      if (e.type === 'closed') { disposed = true; clearTimeout(timer); queued.clear(); setStatus('closed'); return; }
+      if (e.type === 'resync_required') { await resync(); return; }
+      if (e.type === 'transfer' && e.purpose === 'game.portrait.v1') {
+        const asset = await sdk.sessions.readTransfer({ transferId: e.transferId });
+        if (asset.purpose !== 'game.portrait.v1' || asset.contentType !== 'image/png' || asset.byteLength > 128 * 1024) throw Error('invalid_portrait');
+        await call('onPortrait', 'data:image/png;base64,' + asset.dataBase64); return;
+      }
+      if (e.type === 'message') {
+        if (e.message.type === 'bridge.resync') await call('onResync', snapshot());
+        else await call('onMessage', e.message);
+      } else await call('onEvent', e);
+    }
+    async function poll() {
+      while (!disposed) {
+        try {
+          const batch = await sdk.sessions.poll({ cursor, waitMs: 1000 });
+          if (disposed) break;
+          const changed = epoch !== batch.epoch || status !== batch.transportState;
+          epoch = batch.epoch; setStatus(batch.transportState); schedule();
+          if (status === 'closed') { disposed = true; clearTimeout(timer); queued.clear(); break; }
+          for (const item of batch.events) { if (disposed) break; try { await event(item); } catch (error) { report(error); } }
+          cursor = batch.cursor; // advance even when one application callback fails
+          if (changed && status === 'connected') await resync();
+        } catch (error) {
+          if (/session_closed|caller_disposed|permission_denied|permission_revoked|account_changed/.test(String(error.message))) {
+            disposed = true; clearTimeout(timer); queued.clear(); setStatus('closed'); report(error); break;
+          }
+          setStatus('reconnecting'); report(error); await wait(350);
+        }
+        await wait(20);
+      }
+    }
+    async function connect() {
+      if (connecting) return connecting;
+      if (started) return { ...snapshot(), context };
+      if (disposed) throw Error('session_closed');
+      connecting = (async () => {
+        if (!sdk) {
+          if (root.desktopGame) throw Error('host_sdk_unsupported');
+          started = true; setStatus('preview'); return { ...snapshot(), context: null };
+        }
+        if (!sdk.sessions?.getContext || !sdk.sessions?.join || !sdk.sessions?.poll || !sdk.sessions?.send || !sdk.capabilities?.request) throw Error('host_sdk_unsupported');
+        const grant = await sdk.capabilities.request({});
+        if (disposed) throw Error('session_closed');
+        if (grant.status !== 'granted') throw Error('permission_not_granted');
+        context = await sdk.sessions.getContext();
+        if (disposed) throw Error('session_closed');
+        if (!context) { started = true; setStatus('preview'); return { ...snapshot(), context: null }; }
+        if (options.protocol && (context.protocol.id !== options.protocol.id || context.protocol.version !== options.protocol.version)) throw Error('protocol_mismatch');
+        mode = 'session';
+        const result = await sdk.sessions.join();
+        if (disposed) { await sdk.sessions.leave().catch(() => {}); throw Error('session_closed'); }
+        epoch = result.epoch; started = true;
+        setStatus(result.status === 'connected' ? 'connected' : 'waiting');
+        void poll(); if (status === 'connected') await resync();
+        return { ...snapshot(), context };
+      })().catch(error => { if (!disposed) setStatus('error'); report(error); throw error; }).finally(() => { connecting = null; });
+      return connecting;
+    }
+    // Use for bounded low-frequency control messages, not every frame.
+    async function reliable(type, payload, messageId) {
+      if (disposed || status !== 'connected') throw Error('peer_not_connected');
+      assertMessage(type, payload, 7000);
+      return sdk.sessions.send({ lane: 'reliable', type, payload, messageId: messageId || root.crypto.randomUUID() });
+    }
+    async function readCharacter() {
+      if (!sdk?.character?.getCurrent) return null;
+      return sdk.character.getCurrent({ states: ['idle'] });
+    }
+    async function sharePortrait(character) {
+      if (status !== 'connected') return false;
+      const current = character || await readCharacter();
+      const image = new Image(); image.src = current?.poses?.[0]?.dataUrl || ''; await image.decode();
+      const canvas = document.createElement('canvas'); canvas.width = canvas.height = 96;
+      const scale = Math.min(96 / image.naturalWidth, 96 / image.naturalHeight);
+      canvas.getContext('2d').drawImage(image, (96-image.naturalWidth*scale)/2, (96-image.naturalHeight*scale)/2, image.naturalWidth*scale, image.naturalHeight*scale);
+      const dataBase64 = canvas.toDataURL('image/png').split(',')[1];
+      if (dataBase64.length > 175000) throw Error('portrait_too_large');
+      return sdk.sessions.transfer({ purpose: 'game.portrait.v1', contentType: 'image/png', dataBase64 });
+    }
+    function dispose() { disposed = true; clearTimeout(timer); queued.clear(); setStatus('closed'); }
+    async function leave() { const wasSession = mode === 'session'; dispose(); return wasSession ? sdk.sessions.leave() : { released: true, peerAcknowledged: false }; }
+    return { connect, latest, reliable, readCharacter, sharePortrait, leave, dispose, snapshot };
+  }
+  return Object.freeze({ create });
+});
+</script><script>(function(){
+'use strict';
+const $=id=>document.getElementById(id), protocol=JSON.parse($('pet-sdk').textContent).interaction.protocol;
+let mode='preview',role='host',me=0,connection='idle',pending=null,sequence=0,portrait=null,shared=false;
+let state={round:0,rev:0,phase:'lobby',board:Array(9).fill(null),turn:0,winner:null,line:[],ready:[false,false],ack:[0,0]};
+const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const names=['玩家一','玩家二'];
+function error(e){$('error').hidden=false;$('error').textContent=({host_sdk_unsupported:'当前桌宠不支持作品联机，请升级到兼容客户端。',permission_not_granted:'未获授权，请允许作品权限后重新打开。',protocol_mismatch:'游戏版本不一致，请重新发送同一份 HTML。'})[e.message]||'操作暂未完成：'+e.message;}
+function publish(){if(mode==='session'&&role==='host'&&connection==='connected')link.latest('state','game.state',state);}
+function apply(player,d){
+ if(!d||!Number.isSafeInteger(d.seq)||d.seq<1||d.seq<=state.ack[player]){publish();return;}
+ state.ack[player]=d.seq;state.rev++;
+ if(d.round===state.round){
+  if(d.kind==='ready'&&state.phase!=='playing'){
+   state.ready[player]=true;
+   if(state.ready.every(Boolean))state={...state,round:state.round+1,phase:'playing',board:Array(9).fill(null),turn:state.round%2,winner:null,line:[],ready:[false,false]};
+  }else if(d.kind==='move'&&state.phase==='playing'&&state.turn===player&&Number.isInteger(d.cell)&&d.cell>=0&&d.cell<9&&state.board[d.cell]===null){
+   state.board[d.cell]=player;const line=lines.find(l=>l.every(i=>state.board[i]===player));
+   if(line){state.phase='ended';state.winner=player;state.line=line;}
+   else if(state.board.every(n=>n!==null)){state.phase='ended';state.winner='draw';}
+   else state.turn=1-player;
+  }
+ }
+ publish();render();
+}
+function submit(kind,cell,player=me){
+ if(!['preview','connected'].includes(connection)||pending)return;
+ const d={seq:mode==='preview'?state.ack[player]+1:++sequence,round:state.round,kind,cell};
+ if(mode==='preview'||role==='host')apply(player,d);
+ else{pending={data:d,id:crypto.randomUUID()};sendPending();render();}
+}
+function sendPending(){if(pending&&connection==='connected')void link.reliable('game.action',pending.data,pending.id).catch(error);}
+function valid(s){return s&&Number.isSafeInteger(s.round)&&Number.isSafeInteger(s.rev)&&['lobby','playing','ended'].includes(s.phase)&&Array.isArray(s.board)&&s.board.length===9&&s.board.every(n=>n===null||n===0||n===1)&&[0,1].includes(s.turn)&&[null,0,1,'draw'].includes(s.winner)&&Array.isArray(s.line)&&s.line.every(n=>Number.isInteger(n)&&n>=0&&n<9)&&Array.isArray(s.ready)&&s.ready.length===2&&s.ready.every(n=>typeof n==='boolean')&&Array.isArray(s.ack)&&s.ack.length===2&&s.ack.every(Number.isSafeInteger);}
+const link=PetGameBridge.create({protocol,
+ onStatus(s){mode=s.mode;role=s.role;me=role==='host'?0:1;connection=s.status;
+  $('connection').textContent=({preview:'本地预览 · 同屏轮流试玩，尚未联机',waiting:'等待好友接受邀请…',connected:'局域网会话已连接',reconnecting:'连接中断 · 暂停落子，正在恢复…',closed:'对局已关闭 · 请重新发送邀请',error:'连接不可用'})[connection]||'正在连接…';
+  if(mode==='session'){names[me]='我的桌宠';names[1-me]=s.peer?.displayName||'好友';}
+  render();if(connection==='connected'){publish();sendPending();share();}
+ },
+ onMessage(m){if(role==='host'&&m.type==='game.action')apply(1,m.payload);
+  if(role==='guest'&&m.type==='game.state'){if(!valid(m.payload))throw Error('invalid_game_state');if(m.payload.rev<state.rev)return;state=m.payload;if(pending&&state.ack[me]>=pending.data.seq)pending=null;sequence=Math.max(sequence,state.ack[me]);render();}
+ },
+ onResync(){publish();sendPending();},
+ onPortrait(url){$('portrait-'+(1-me)).src=url;$('portrait-'+(1-me)).hidden=false;$('fallback-'+(1-me)).hidden=true;},onError:error
+});
+function share(){if(portrait&&connection==='connected'&&!shared){shared=true;void link.sharePortrait(portrait).catch(e=>{shared=false;error(e);});}}
+function render(){
+ const available=['preview','connected'].includes(connection);
+ for(let p=0;p<2;p++){
+  $('name-'+p).textContent=names[p];$('player-'+p).classList.toggle('active',state.phase==='playing'&&state.turn===p);
+  const b=$('ready-'+p);b.hidden=mode==='session'&&p!==me;b.disabled=!available||!!pending||state.phase==='playing'||state.ready[p];b.textContent=state.ready[p]?'已准备 · 等对方':state.phase==='ended'?'再来一局':'准备开始';
+  $('mark-'+p).textContent=(p===0?'×':'○')+(mode==='session'&&p===me?' · 你':'');
+ }
+ for(let i=0;i<9;i++){const b=$('cell-'+i),v=state.board[i];b.textContent=v===null?'':v===0?'×':'○';b.dataset.player=v===null?'':v;b.classList.toggle('win',state.line.includes(i));b.disabled=!available||!!pending||state.phase!=='playing'||v!==null||(mode==='session'&&state.turn!==me);b.setAttribute('aria-label',`第 ${Math.floor(i/3)+1} 行第 ${i%3+1} 列，${v===null?'空位':v===0?'叉':'圆'}`);}
+ $('status').textContent=state.phase==='lobby'?'双方准备，开始第一局':state.phase==='ended'?(state.winner==='draw'?'平局！势均力敌':names[state.winner]+' 获胜！'):`第 ${state.round} 局 · 轮到${names[state.turn]} ${state.turn===0?'×':'○'}`;
+ $('detail').textContent=pending?'正在等待房主确认…':state.phase==='ended'?'双方点击「再来一局」后重开，轮换先手。':state.phase==='lobby'?'双方各自点击准备。浏览器中可代双方操作。':'横、竖、斜任意三个相同棋子连线即获胜。';
+ $('preview-help').hidden=mode!=='preview';
+}
+for(let i=0;i<9;i++){const b=document.createElement('button');b.id='cell-'+i;b.className='cell';b.addEventListener('click',()=>submit('move',i,mode==='preview'?state.turn:me));$('board').append(b);}
+for(let p=0;p<2;p++)$('ready-'+p).addEventListener('click',()=>submit('ready',null,p));
+$('leave').addEventListener('click',async()=>{try{await link.leave();window.desktopGame?.exit();}catch(e){error(e);}});
+const heartbeat=setInterval(()=>{if(connection==='connected'){publish();sendPending();}},1000);
+window.addEventListener('pagehide',()=>{clearInterval(heartbeat);link.dispose();});
+window.petGameDebug=()=>JSON.parse(JSON.stringify({mode,role,connection,state,pending}));
+void link.connect().then(async()=>{try{portrait=await link.readCharacter();if(!portrait?.poses?.[0]?.dataUrl){$('portrait-note').textContent='未读取到桌宠头像，使用棋子头像。';return;}names[me]=portrait.name||'我的桌宠';$('portrait-'+me).src=portrait.poses[0].dataUrl;$('portrait-'+me).hidden=false;$('fallback-'+me).hidden=true;share();render();}catch(e){$('portrait-note').textContent='桌宠头像不可用，使用棋子头像。';}}).catch(error);
+render();
+})();
+</script></body></html>
+
+<!-- Bundled bridge/starter license; not an ownership claim over your original game.
+MIT License
+
+Copyright (c) 2026 create-pet-game contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+-->

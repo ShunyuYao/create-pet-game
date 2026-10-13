@@ -1,0 +1,9 @@
+{
+  "name": "pet-game-codex-skill-delivery",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "node tests/portable-browser.mjs",
+    "pack": "python3 package_skill.py"
+  }
+}
