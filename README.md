@@ -40,7 +40,11 @@ node create-pet-game/scripts/prepare-vibe-import.mjs \
 
 材料工具不依赖宿主源码，不覆盖旧输出；它准备字节与条目，不伪装成已经修改产品。用户要求接入且宿主检出可访问时，skill 会继续登记并验证；独立制作者仍可只交付 HTML。不会因此自动公开发布或给好友发送。
 
+同时制作自定义形象时，按 [形象接入流程](create-pet-game/references/appearance-import.md) 将预览/动作输出转换为合法外观包，从「伙伴外观 → 导入形象」登记，按授权即时换上，再验游戏读取当前外观。2D 帧、制作草稿与实时 3D 使用各自契约；预览成功不等于产品已导入。
+
 New games use ShunyuYao's public 3D game implementations as their visual/architecture references; this repository's 2D examples remain regression fixtures. The bundled sprite adapter only renders realtime appearance data into PNG poses; a live 3D scene needs its own offline-bundled implementation. The portable builder still targets two-player LAN play. `prepare-vibe-import.mjs` prepares exact bytes and catalog metadata without host source or overwriting an existing output. Product registration continues only in an accessible, user-authorized host environment; packet preparation is not proof of installation. Catalog hot reload depends on the running host. No host installers, download/update locations or private character assets are distributed here.
+
+For custom appearances, convert authoring/preview output to the host's supported appearance package, import it through the appearance library, apply only as authorized, and verify the game reads the selected appearance. Current local 2D application is immediate and preserves companion identity. Drafts and realtime 3D assets require their respective contracts; preview success alone does not prove import or game compatibility.
 
 ## 技术回归夹具
 

@@ -13,6 +13,7 @@ description: 用 Codex 按用户玩法需求制作可导入桌宠的单文件 HT
 2. 默认按双人局域网制作。读 [SDK 契约](references/desktop-pet-sdk.md)、[角色与风格](references/character-and-style.md) 和 [ShunyuYao 游戏参考](references/3d-game-reference.md)，按玩法选相关的公开源码。默认参考这些项目的 3D 场景/布偶呈现；用户明确要求 2D 时遵从。**不要以本仓库自己生成的 2D examples 或计分 starter 作为新作品的视觉/玩法依据。** 不需要克隆桌宠宿主。若用户指定复杂商业游戏，说明可以实现的小游戏规模与取舍，保留其核心玩法；不要擅自换成固定玩法。
 3. 用 `node <skill>/scripts/init-game.mjs <新目录> --id <小写游戏ID> --title <标题>` 建立独立项目。`<skill>` 指当前 SKILL.md 所在目录，不是某台机器的固定路径。
 4. 实现用户的游戏。默认让当前桌宠成为游戏中的完整可辨认角色；必须有大厅预览、读取失败原因与重试，不以通用圆点代替。按选定参考重做场景、相机、道具与动作，不因射击玩法自动套深色军事界面。起始工程只提供角色、准备、状态同步和重开的接线，必须替换其规则/画面。`character3d:true` 仅启用随包的 3D→PNG 读取器，**不等于 3D 场景或实时骨架动作**；需要完整 3D 时在作品项目中构建并内联场景渲染与兼容角色适配。保留桥接边界，不强迫不同玩法采用同一相机/引擎。实时游戏另读 [联机设计](references/multiplayer.md)。
+   用户还要求制作/使用自定义形象时，读 [自定义形象接入](references/appearance-import.md)，完成已授权的形象包转换、产品外观库导入与换上，再验证游戏读取该外观。游戏、形象分别交付与验收；仅要求游戏时直接读取现有桌宠，不额外生成新角色。
 5. 生成的作品只能通过 `window.pet` 获得宿主授权能力；不要访问宿主文件、Node、账号 token、原始 IPC。不要在成品里调用 Codex 工具，也不要内嵌模型密钥。运行时脚本、样式和必要素材都随文件内联，不依赖 CDN 或作者电脑的路径。
 6. 执行 `node <skill>/scripts/build-game.mjs <项目目录> <输出.html>`，再执行 `node <skill>/scripts/validate-game.mjs <输出.html>`。改动后重建，避免源码与交付 HTML 不一致。检查失败后修正根因再重跑，不为了绿灯删除有效断言。
 7. 按 [验收方法](references/testing.md) 验证真实操作、胜负、再开、断线和关闭。`scripts/browser-smoke.mjs` 可在安装了 Chrome 的制作环境进行隔离无界面浏览器预览检查；它不是桌宠 SDK 或真实 LAN 测试。没有兼容桌宠时照样完成制作和浏览器检查，并明确宿主联机尚待验证，不把缺环境记成通过。
@@ -34,6 +35,7 @@ description: 用 Codex 按用户玩法需求制作可导入桌宠的单文件 HT
 - `references/character-and-style.md`：2D/3D 当前形象、场景呈现、素材交换与风格选择。
 - `references/3d-game-reference.md`：作者的赛车、坦克、水球、颜料、大乱斗、躲猫猫；按玩法选源码，区分真实场景 3D 与姿势转图片。
 - `references/product-import.md`：完成游戏后接入「传 vibe → 逗 TA 一下 → 游戏」，资源与目录原子发布、热加载及实际发送验收。
+- `references/appearance-import.md`：自定义形象制作后的数据包转换、外观库导入、即时换上及游戏读取验证；区分 2D 帧、制作草稿与实时 3D。
 - `references/multiplayer.md`：不同玩法如何使用联机通道；与模板无关。
 - `references/testing.md`：分层验收与通用工具命令。
 - `assets/starter/`：可离线构建的技术示例和可复用的 `pet-bridge.js`。
