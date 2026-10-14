@@ -26,6 +26,8 @@ node install.mjs
 
 制作默认参考 ShunyuYao 的 [赛车](https://github.com/ShunyuYao/pet-kart)、[坦克](https://github.com/ShunyuYao/pet-tank)、[水球](https://github.com/ShunyuYao/pet-bomb)、[颜料](https://github.com/ShunyuYao/pet-paint)、[大乱斗](https://github.com/ShunyuYao/pet-brawl) 的 3D 场景/布偶，以及 [躲猫猫](https://github.com/ShunyuYao/pet-hide-duel) 的姿势编辑，按玩法选择相关源码。具体文件、快照、许可与呈现区别见 [3D 游戏参考](create-pet-game/references/3d-game-reference.md)。用户指定 2D 或其他风格时遵从，不把技能自己生成的 2D 示例作为新作品视觉依据。
 
+制作与验收还参考 [大乱斗/赛车的联机修复](create-pet-game/references/network-lessons.md)：客人自身角色回拉、其他车停住再跳跃、ACK 时间线、重连重复传形象、乱序/晚加入和准备恢复。检查双方实际操作及最终绘制轨迹，不能只验房主画面或“能连上”。缓冲/外推参数按具体玩法实测，保持房主规则权威。
+
 随包 `PetDollSprite` 将兼容 rat-doll v2 外观转为 idle/walk 透明 PNG，`character3d:true` 不等于实时 3D 场景或通用骨架。完整 3D 需要在作品项目中实现并离线打包对应场景/角色适配；浏览器预览无法读取桌宠，会明确标注。公共参考中的多人/中转不改变本技能双人 LAN 构建契约。
 
 ## 完成后直接接入产品
@@ -45,6 +47,8 @@ node create-pet-game/scripts/prepare-vibe-import.mjs \
 New games use ShunyuYao's public 3D game implementations as their visual/architecture references; this repository's 2D examples remain regression fixtures. The bundled sprite adapter only renders realtime appearance data into PNG poses; a live 3D scene needs its own offline-bundled implementation. The portable builder still targets two-player LAN play. `prepare-vibe-import.mjs` prepares exact bytes and catalog metadata without host source or overwriting an existing output. Product registration continues only in an accessible, user-authorized host environment; packet preparation is not proof of installation. Catalog hot reload depends on the running host. No host installers, download/update locations or private character assets are distributed here.
 
 For custom appearances, convert authoring/preview output to the host's supported appearance package, import it through the appearance library, apply only as authorized, and verify the game reads the selected appearance. Current local 2D application is immediate and preserves companion identity. Drafts and realtime 3D assets require their respective contracts; preview success alone does not prove import or game compatibility.
+
+The networking reference now includes the author's recent Brawl and Kart fixes: guest-local correction, remote motion on authority time, ACK/prediction separation, bounded appearance recovery and ready-state ordering. Acceptance observes both players' actual rendered trajectories under normal and batched traffic; these references do not certify a new game's multiplayer behavior.
 
 ## 技术回归夹具
 

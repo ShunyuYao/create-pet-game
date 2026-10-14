@@ -8,14 +8,16 @@
 
 | 项目 / 已读提交 | 借鉴点 | 优先读的文件 |
 | --- | --- | --- |
-| [pet-kart](https://github.com/ShunyuYao/pet-kart/tree/0e275f1ffed0a8b76ad1eef060170ceee3f981c8) | 完整 3D 赛道、跟随相机、玩具车与坐姿车手，站姿领奖台和实时颁奖。适合驾驶、空间移动、结算演出。 | `src/scene.js`、`avatars.js`、`characters.js`、`ceremony.js`；`game/sim.cjs`、`room.cjs` |
+| [pet-kart](https://github.com/ShunyuYao/pet-kart/tree/5f901560fb8a109cce42f3f224afb0d45b293c9f) | 完整 3D 赛道、跟随相机、玩具车与坐姿车手，站姿领奖台和实时颁奖。适合驾驶、空间移动、结算演出；远端车辆按房主比赛时间平滑。 | `src/scene.js`、`avatars.js`、`characters.js`、`ceremony.js`；`game/sim.cjs`、`room.cjs`、`remote-motion.cjs` |
 | [pet-tank](https://github.com/ShunyuYao/pet-tank/tree/9d34a0eccb14332121aa3cb895c83a1064875331) | 俯斜相机、积木地形、可破坏墙、炮塔坐姿布偶。适合网格场景、载具和合作守家。 | `src/scene.js`、`avatars.js`；`game/` 规则；`vendor/pet-kit/` 固定公共层 |
 | [pet-bomb](https://github.com/ShunyuYao/pet-bomb/tree/8f9ac432b3a54c807ae6c4fa689ea20c43607944) | 俯斜 3D 格子场、立体水球/道具、行走布偶。适合房间内走动、互动工作台、爆炸/泡泡效果。 | `src/scene.js`、`avatars.js`；`game/` 规则；`vendor/pet-kit/` |
 | [pet-paint](https://github.com/ShunyuYao/pet-paint/tree/acfa928b9cc5c45700f5ebcd8c79a93e9e65e44c) | 3D 书桌、地面覆盖、瞄准方向与持物角色。适合表面交互、方向操作和持续状态。 | `src/scene.js`、`avatars.js`、`characters.js`；`game/` |
-| [pet-brawl](https://github.com/ShunyuYao/pet-brawl/tree/52807034fc144390fc6ddf8183bc1bd12c31b3cb) | 侧视平台规则、3D 场景/骨架动作、武器姿势与受击翻滚；本地预测和远端平滑。适合角色动作、跳跃、击退。侧视规则不等于角色只能画成 2D。 | `src/scene.js`、`avatars.js`、`poses.js`；`game/match.cjs`、`net.cjs` |
+| [pet-brawl](https://github.com/ShunyuYao/pet-brawl/tree/ccd0acab497441ae8e35fc221a26345cdb4ccb67) | 侧视平台规则、3D 场景/骨架动作、武器姿势与受击翻滚；本地预测、客人自身绘制校正和远端平滑。适合角色动作、跳跃、击退。侧视规则不等于角色只能画成 2D。 | `src/scene.js`、`avatars.js`、`poses.js`；`game/match.cjs`、`net.cjs`、`local-motion.cjs`、`remote-motion.cjs` |
 | [pet-hide-duel](https://github.com/ShunyuYao/pet-hide-duel/tree/276d0204d5211c4318cdc7b2cf563080e565be87) | 可交互的 3D 摆姿势；确认后固定正面图，遮挡和命中共用轮廓。适合需要姿势编辑或轮廓公平的玩法，**不是连续 3D 场景模板**。 | `game/doll-editor.mjs`、`doll-pose.mjs`、`doll-assets.mjs`、`client.js` |
 
 借鉴公共结构时分开看 [pet-kit](https://github.com/ShunyuYao/pet-kit/tree/c30592f1656438a72b165e3d00d609519454808a) 的 `src/room.js`（会话、确认、预算）和 `src/looks.js`（当前形象及角色数据）。骨架、头部与服装来源见 [pet-ragdoll-renderer](https://github.com/ShunyuYao/pet-ragdoll-renderer/tree/73ce21b3d8d7f7398b1d389329a6c65cb69ee2ee)。它们是公共素材/代码契约参考，不要求玩家安装这些制作工具。
+
+联机实现还须参考 [大乱斗与赛车的实际修复](network-lessons.md)：10-14 的自身回拉与远端停跳，以及之前的 ACK 时间线、重复传形象、晚加入/乱序和准备恢复。公共套件快照与作品自己的 vendor 版本分别核对，不能将索引中的 pet-kit 提交当成所有游戏当前使用的版本。
 
 ## 3D 制作路径
 
