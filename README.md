@@ -24,7 +24,7 @@ node install.mjs
 
 ## 桌宠形象和风格
 
-新游戏默认调用公共 [pet-kit](https://github.com/ShunyuYao/pet-kit)，复用 `Room` 的房间/准备/事件/状态流/时钟/预算，以及 `Looks` 的形象读取/校验/缓存和房间素材交换；规则、场景、预测与插值仍由作品实现。[接入指南](create-pet-game/references/pet-kit.md) 核对 0.2.1 的固定源码 SHA，要求 vendor、公开入口、构建前摘要校验、离线 bundle 与 MIT 许可。当前 starter 仍是旧桥技术夹具，初始化后要替换接线，不会自动安装或接入 pet-kit。
+新游戏默认调用公共 [pet-kit](https://github.com/ShunyuYao/pet-kit)，复用 `Room` 的房间/准备/事件/状态流/时钟/预算，以及 `Looks` 的形象读取/校验/缓存和房间素材交换；0.3.0 新增可选 `Motion` 远端显示缓冲；规则、场景、本地预测和运动字段/边界适配仍由作品实现。[接入指南](create-pet-game/references/pet-kit.md) 核对 pet-kit 0.3.0 的固定源码 SHA，要求 vendor、公开入口、构建前摘要校验、离线 bundle 与 MIT 许可。当前 starter 仍是旧桥技术夹具，初始化后要替换接线，不会自动安装或接入 pet-kit。
 
 制作默认参考 ShunyuYao 的 [赛车](https://github.com/ShunyuYao/pet-kart)、[坦克](https://github.com/ShunyuYao/pet-tank)、[水球](https://github.com/ShunyuYao/pet-bomb)、[颜料](https://github.com/ShunyuYao/pet-paint)、[大乱斗](https://github.com/ShunyuYao/pet-brawl) 的 3D 场景/布偶，以及 [躲猫猫](https://github.com/ShunyuYao/pet-hide-duel) 的姿势编辑，按玩法选择相关源码。具体文件、快照、许可与呈现区别见 [3D 游戏参考](create-pet-game/references/3d-game-reference.md)。用户指定 2D 或其他风格时遵从，不把技能自己生成的 2D 示例作为新作品视觉依据。
 
@@ -52,7 +52,7 @@ For custom appearances, convert authoring/preview output to the host's supported
 
 The networking reference now includes the author's recent Brawl and Kart fixes: guest-local correction, remote motion on authority time, ACK/prediction separation, bounded appearance recovery and ready-state ordering. Acceptance observes both players' actual rendered trajectories under normal and batched traffic; these references do not certify a new game's multiplayer behavior.
 
-New games should call the public pet-kit Room/Looks abstraction, pin a reviewed source commit, vendor it, verify the copy before each build, and bundle it offline with its MIT license. Gameplay, rendering and business acknowledgements remain game responsibilities. The current starter is still a legacy bridge fixture: neither initialization nor HTML assembly automatically installs or integrates pet-kit, and the game must not run both session loops. See the [integration guide](create-pet-game/references/pet-kit.md) for the verified 0.2.1 API and boundaries.
+New games should call the public pet-kit Room/Looks abstraction, pin a reviewed source commit, vendor it, verify the copy before each build, and bundle it offline with its MIT license. Gameplay, rendering and business acknowledgements remain game responsibilities. The current starter is still a legacy bridge fixture: neither initialization nor HTML assembly automatically installs or integrates pet-kit, and the game must not run both session loops. See the [integration guide](create-pet-game/references/pet-kit.md) for the verified pet-kit 0.3.0 API and boundaries. Motion is an opt-in, transport-independent display buffer: preserve original simulation timestamps, reject stale generations, reset at lifecycle transitions, and keep sampled poses out of authoritative state and local input prediction.
 
 ## 技术回归夹具
 

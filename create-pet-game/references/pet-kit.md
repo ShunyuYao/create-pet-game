@@ -1,8 +1,8 @@
 # 公共 pet-kit：新游戏默认调用的统一抽象
 
-[pet-kit](https://github.com/ShunyuYao/pet-kit) 是作者的公共房间/传输与形象底座。新游戏默认实际调用它，不仅将它列为参考链接。房间座位、大厅、准备、房主设置、可靠事件、状态流/压缩、房主时钟、形象交换、退出和预算统计复用公共层；场景、相机、规则、物理、输入预测、远端插值和业务确认仍由作品实现。
+[pet-kit](https://github.com/ShunyuYao/pet-kit) 是作者的公共房间/传输与形象底座。新游戏默认实际调用它，不仅将它列为参考链接。房间座位、大厅、准备、房主设置、可靠事件、状态流/压缩、房主时钟、形象交换、退出和预算统计复用公共层；实时远端运动可选择公共 Motion 显示缓冲。场景、相机、规则、物理、本地预测、连续/离散字段适配和业务确认仍由作品实现。
 
-本指南核对 **0.2.1 / `c30592f1656438a72b165e3d00d609519454808a`** 的 [官方说明](https://github.com/ShunyuYao/pet-kit/blob/c30592f1656438a72b165e3d00d609519454808a/README.md)、[公开入口](https://github.com/ShunyuYao/pet-kit/blob/c30592f1656438a72b165e3d00d609519454808a/src/index.js) 与 `src/looks.js`。后续制作先核对公共仓库，再固定此次采用的版本/完整 SHA；不要以浮动 main 或单独版本号代替源码证据。当前 package 是 `private:true`，采用源码导出，不臆造 npm 发布。
+本指南核对 **0.3.0 / `8887be3c589672d83b987911847a760eac4d427f`** 的 [官方说明](https://github.com/ShunyuYao/pet-kit/blob/8887be3c589672d83b987911847a760eac4d427f/README.md)、[公开入口](https://github.com/ShunyuYao/pet-kit/blob/8887be3c589672d83b987911847a760eac4d427f/src/index.js)、`src/looks.js` 与新增 `src/motion.js`。0.3.0 保留 0.2.1 Room 契约，新增可选 Motion，不自动启用或迁移旧游戏。后续制作先核对公共仓库，再固定此次采用的版本/完整 SHA；不要以浮动 main 或单独版本号代替源码证据。当前 package 是 `private:true`，采用源码导出，不臆造 npm 发布。
 
 ## 固定副本与构建
 
@@ -20,7 +20,7 @@ const path = require('node:path');
 const version = require(path.join(gameDir, 'vendor/pet-kit/verify.cjs')).check(gameDir);
 ```
 
-游戏只引用 `index.js`（CommonJS 的 `Room` / `Wire`）、`looks.js`（浏览器 ES module）；测试可引用 `testing/fake-sessions.cjs`，构建可用 `verify.cjs`。禁止直接引用内部 `room.js` / `wire.js` / `zip.js`，禁止改 vendor 实现绕过校验。公共层修复回到 pet-kit，重新导出并复验作品。回执保留版本、完整上游 SHA 和副本摘要。
+游戏只引用 `index.js`（CommonJS 的 `Room` / `Wire` / `Motion`）、`looks.js`（浏览器 ES module）或独立 `motion.js`（CommonJS，可单独 bundle）；测试可引用 `testing/fake-sessions.cjs`，构建可用 `verify.cjs`。禁止直接引用内部 `room.js` / `wire.js` / `zip.js`，禁止改 vendor 实现绕过校验。公共层修复回到 pet-kit，重新导出并复验作品。回执保留版本、完整上游 SHA 和副本摘要。
 
 沿用作品自己的模块构建器，将公共入口和游戏模块离线 bundle 为可内联的 `game.js`，再运行本 skill 的 `build-game` / `validate-game`；将 vendor 的 `LICENSE` 加入作品 `THIRD_PARTY_NOTICES.txt`。**`init-game` 仍生成旧 PetGameBridge 技术起点，`build-game` 只做 HTML 装配，不会自动下载、vendor 或 bundle pet-kit。** 替换原有游戏接线，新路径不调用 `PetGameBridge.connect()`，也不另外运行 `sessions.poll/send/transfer` 循环；保留模板装配标记。未使用的旧桥文件可以为空，载入辅助定义也不等于应启动它。成品没有外部模块路径/CDN，玩家只收到一个 HTML。
 
@@ -73,6 +73,44 @@ export function createGameRoom(pet, protocol, game) {
 - 网络形象用 `room.start/setProfile` 与 `onAsset`。签名随素材改变，先 `Looks.checkAsset` 再解码；按 signature 缓存，在 `onLobby` 选择玩家当前签名，切回缓存不会必然再触发 `onAsset`。双人素材来源 slot 为 0/1；多人宿主向客人转发时可能为 null，仍按签名对应玩家，不能将测试 fake 的多人 context 当作双人来源契约。默认大厅更新；确需局内更新才显式 `continuous`，并实现授权后的形象变更监听及预算验收。`continuous` 本身不会监听桌宠换装。
 
 HTML 的 `window.pet`、能力探测和授权仍遵守 [SDK 契约](desktop-pet-sdk.md)；pet-kit 不绕过权限，也不新增服务器或支持未声明的人数/传输。
+
+## 0.3.0：可选的远端 Motion 显示缓冲
+
+对需要连续移动的远端实体，优先复用 [Motion](https://github.com/ShunyuYao/pet-kit/blob/8887be3c589672d83b987911847a760eac4d427f/src/motion.js) 的时间线和缓存，作品只适配自己的连续字段、边界与生命周期。它不依赖 Room、不自动改变联网频率，棋盘/静止玩法不必启用。可从 `Kit.Motion` 使用同一实现；只需要运动工具时用独立入口：
+
+```js
+// remote-motion-adapter.mjs；位置二维只是示例，可按玩法扩展到三维/角度。
+import Motion from './vendor/pet-kit/motion.js';
+
+export function createRemotePresentation({delayMs, activeRound, discontinuous}) {
+  const buffer = Motion.create({
+    delayMs, discontinuous,
+    interpolate: (a, b, f) => ({
+      x: a.x + (b.x - a.x) * f,
+      y: a.y + (b.y - a.y) * f
+    })
+  });
+  return {
+    pushValidated(packet, receivedAt) {
+      // 此前已由作品校验 schema/来源/序号；库不判断 round 的新旧。
+      if (packet.round !== activeRound()) return false;
+      return buffer.push({time: packet.sampleMs, key: packet.round, value: packet.pose}, receivedAt);
+    },
+    sample: now => buffer.sample(now),
+    reset: () => buffer.reset(),
+    stats: () => buffer.stats()
+  };
+}
+```
+
+在接收回调中 `pushValidated(packet, performance.now())`，每个绘制帧用同一单调时钟 `sample(performance.now())`；空缓冲返回 null，待样本就绪后再绘制。只将返回的位置交给画面，不写回碰撞、工作台交互、得分或权威状态。自己控制的角色不套远端缓冲延迟，本地预测/权威纠偏仍由作品负责。
+
+- `time` 必须是**位置原始生成的模拟时刻（有限毫秒）**，同一 key 内严格递增。转发保留它，重复同一位置样本不能改用转发/收包时间；否则仅导入 Motion 仍会停跳。各实体/来源时钟独立缓冲，不混成一条时间线。
+- 默认 `delayMs:100`、`capacity:32`、`resetAfterMs:1000`、`maxProjectionMs:0`；延迟是可调整起点，不是各玩法的验收阈值。一个样本保持原位；容量可设 2–512。重复/过期时间丢弃，历史/回调参数/返回值隔离复制。统计只有缓存模式/时间/丢弃等，不推断网络丢包率或 RTT。
+- 外推默认关闭；需要时作品同时提供 `project(a,b,aheadMs,spanMs)` 与正的 `maxProjectionMs`，库限制 aheadMs，到上限冻结。角度最短路径、地图边界、碰撞和急转向后的纠偏由作品约束；不能把延长外推当成恢复连接。
+- 换局/阶段/轨道、暂停恢复、重生、传送、控制权变化与重连按玩法主动 `reset()` 或换稳定原始值 key，并先拒绝旧代消息。库只看 key 是否相同，不懂新旧顺序；不能让迟到旧局切回旧轨迹。连续字段用 `interpolate(a,b,f,spanMs)`；`discontinuous(a,b,spanMs)` 为 true 时直接选 b，不穿过传送/离散动作。暂停时停止采样或重置，不能靠重复时间戳维持动画。长收包空窗会清时间基线，连接提示仍由作品负责。
+
+按 [联机修复验收](network-lessons.md#必须落成作品验收的路径) 对比自己/远端、正常/成批收包、停止/转向、离散断点和完整玩法，且证明采样不改变规则。`npm run test:motion` 已属于公共包 `npm test`，不替代作品真实 E2E。上游 [迁移记录](https://github.com/ShunyuYao/pet-kit/blob/8887be3c589672d83b987911847a760eac4d427f/docs/motion-validation.md) 列举赛车、颜料、食堂、矿工；这些是作者的消费方证据，不是本 skill 已迁移或重测所有作品。
 
 ## 验收与缺口
 

@@ -14,6 +14,8 @@ node /path/to/create-pet-game/scripts/browser-smoke.mjs ./dist/my-game.html --ou
 
 新作品执行 [pet-kit 固定副本与验收](pet-kit.md)：构建前 `verify.cjs.check(gameDir)`，公开入口 bundle、MIT 许可、上游 SHA 与副本摘要；实际只运行一套 Room。旧 starter 的浏览器/协议通过只能证明旧桥夹具，不能作为新作品 pet-kit 调用、权限或真实联机证据。
 
+采用可选 Motion 时，另验原始样本时间不被转发重写、同来源单调时钟、重复/乱序与旧局拒收、有界外推、传送/暂停/控制权的重置、规则值隔离，以及自己控制的角色没有新增缓冲延迟。公共包 `test:motion` 是工具证据；真实双端完整玩法仍按下方分层验收，不能只看曲线变平滑。
+
 模板中的 `__PET_SDK__`、`__PET_BRIDGE__`、`__GAME_CODE__` 是必需的装配位置；标题、简介和样式标记可以按你设计的布局保留或删除。不要删除装配位置后假设构建器仍会自动注入相应能力。
 
 ## 分开报告证据

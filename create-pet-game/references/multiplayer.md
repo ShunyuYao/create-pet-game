@@ -15,7 +15,7 @@
 
 ## 新作品用 pet-kit，旧桥保留作兼容夹具
 
-新作品用 `Room.create(pet.sessions, {..., maxPlayers:2})`，状态/输入通过 `hostState/guestState/onState`，离散事件通过 `emit/onEvent`，准备与房间设置通过 `setReady/setPrefs/setSettings`，形象通过 `Looks`、`start/setProfile/onAsset`。固定源码、构建校验、实际回调和生命周期见 [接入指南](pet-kit.md)。公共层不替代业务确认、玩家预测/插值或裁判。
+新作品用 `Room.create(pet.sessions, {..., maxPlayers:2})`，状态/输入通过 `hostState/guestState/onState`，离散事件通过 `emit/onEvent`，准备与房间设置通过 `setReady/setPrefs/setSettings`，形象通过 `Looks`、`start/setProfile/onAsset`。固定源码、构建校验、实际回调和生命周期见 [接入指南](pet-kit.md)。实时远端轨迹可调用其中的 Motion 时间缓冲；本地预测、连续字段/离散断点适配、业务确认与裁判仍由作品负责。
 
 下面是原 `PetGameBridge` 技术夹具的接口，供已有作品兼容和回归理解；它不是新作品默认接入路径。迁移时替换其 connect/latest/reliable/角色交换调用，不同时启动两套轮询。
 
