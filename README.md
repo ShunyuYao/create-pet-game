@@ -24,6 +24,8 @@ node install.mjs
 
 ## 桌宠形象和风格
 
+新游戏默认调用公共 [pet-kit](https://github.com/ShunyuYao/pet-kit)，复用 `Room` 的房间/准备/事件/状态流/时钟/预算，以及 `Looks` 的形象读取/校验/缓存和房间素材交换；规则、场景、预测与插值仍由作品实现。[接入指南](create-pet-game/references/pet-kit.md) 核对 0.2.1 的固定源码 SHA，要求 vendor、公开入口、构建前摘要校验、离线 bundle 与 MIT 许可。当前 starter 仍是旧桥技术夹具，初始化后要替换接线，不会自动安装或接入 pet-kit。
+
 制作默认参考 ShunyuYao 的 [赛车](https://github.com/ShunyuYao/pet-kart)、[坦克](https://github.com/ShunyuYao/pet-tank)、[水球](https://github.com/ShunyuYao/pet-bomb)、[颜料](https://github.com/ShunyuYao/pet-paint)、[大乱斗](https://github.com/ShunyuYao/pet-brawl) 的 3D 场景/布偶，以及 [躲猫猫](https://github.com/ShunyuYao/pet-hide-duel) 的姿势编辑，按玩法选择相关源码。具体文件、快照、许可与呈现区别见 [3D 游戏参考](create-pet-game/references/3d-game-reference.md)。用户指定 2D 或其他风格时遵从，不把技能自己生成的 2D 示例作为新作品视觉依据。
 
 制作与验收还参考 [大乱斗/赛车的联机修复](create-pet-game/references/network-lessons.md)：客人自身角色回拉、其他车停住再跳跃、ACK 时间线、重连重复传形象、乱序/晚加入和准备恢复。检查双方实际操作及最终绘制轨迹，不能只验房主画面或“能连上”。缓冲/外推参数按具体玩法实测，保持房主规则权威。
@@ -49,6 +51,8 @@ New games use ShunyuYao's public 3D game implementations as their visual/archite
 For custom appearances, convert authoring/preview output to the host's supported appearance package, import it through the appearance library, apply only as authorized, and verify the game reads the selected appearance. Current local 2D application is immediate and preserves companion identity. Drafts and realtime 3D assets require their respective contracts; preview success alone does not prove import or game compatibility.
 
 The networking reference now includes the author's recent Brawl and Kart fixes: guest-local correction, remote motion on authority time, ACK/prediction separation, bounded appearance recovery and ready-state ordering. Acceptance observes both players' actual rendered trajectories under normal and batched traffic; these references do not certify a new game's multiplayer behavior.
+
+New games should call the public pet-kit Room/Looks abstraction, pin a reviewed source commit, vendor it, verify the copy before each build, and bundle it offline with its MIT license. Gameplay, rendering and business acknowledgements remain game responsibilities. The current starter is still a legacy bridge fixture: neither initialization nor HTML assembly automatically installs or integrates pet-kit, and the game must not run both session loops. See the [integration guide](create-pet-game/references/pet-kit.md) for the verified 0.2.1 API and boundaries.
 
 ## 技术回归夹具
 
@@ -78,7 +82,7 @@ node tests/example-gameplay.mjs examples/pet-tictactoe.html --out evidence/examp
 npm run pack
 ```
 
-安装 skill、制作游戏及运行检查无需 npm 依赖；打包另需 Python 3。维护者修改随包 3D 组件源码后，运行 `npm ci && npm run build:character` 重建已提交的 IIFE。第三方源码、版本和许可位于 `create-pet-game/assets/character/`。已完成独立目录构建、ZIP 安装、浏览器真实输入和模拟协议验证。维护者另外在两个隔离的真实桌宠进程中验证过文件发送、邀请配对、授权、头像交换、对局、重开及退出；这些宿主测试不构成公开客户端版本兼容承诺。
+安装 skill、运行随包工具及旧桥夹具检查无需 npm 依赖；采用 pet-kit / 3D 引擎的新作品按其工程安装制作依赖并离线 bundle，玩家仍不需要这些依赖。技能 ZIP 打包另需 Python 3。维护者修改随包 3D 组件源码后，运行 `npm ci && npm run build:character` 重建已提交的 IIFE。第三方源码、版本和许可位于 `create-pet-game/assets/character/`。已完成独立目录构建、ZIP 安装、浏览器真实输入和模拟协议验证。维护者另外在两个隔离的真实桌宠进程中验证过文件发送、邀请配对、授权、头像交换、对局、重开及退出；这些宿主测试不构成公开客户端版本兼容承诺。
 
 尚未验证物理双机 LAN、Windows 安装、跨子网/防火墙环境。模拟协议、同机双实例和物理双机测试是不同的证据。
 

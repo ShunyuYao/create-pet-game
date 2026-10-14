@@ -4,13 +4,15 @@
 
 ```sh
 node /path/to/create-pet-game/scripts/init-game.mjs ./my-game --id my-pet-game --title "我的游戏"
-# 按需求修改 my-game/game.js、style.css、index.template.html、game.json
+# 按需求实现玩法，按 pet-kit 指南导出/校验公共包并 bundle 为 game.js
 node /path/to/create-pet-game/scripts/build-game.mjs ./my-game ./dist/my-game.html
 node /path/to/create-pet-game/scripts/validate-game.mjs ./dist/my-game.html
 node /path/to/create-pet-game/scripts/browser-smoke.mjs ./dist/my-game.html --out ./evidence
 ```
 
 工具按自身位置找随包文件，不依赖当前工作目录、作者路径、密钥或桌宠仓库。将输出 HTML 移到别的目录再检查，确认没有遗漏相对路径资产。`build-game` 不安装依赖；选择第三方引擎时，在作品项目中安装、离线打包并保留许可。
+
+新作品执行 [pet-kit 固定副本与验收](pet-kit.md)：构建前 `verify.cjs.check(gameDir)`，公开入口 bundle、MIT 许可、上游 SHA 与副本摘要；实际只运行一套 Room。旧 starter 的浏览器/协议通过只能证明旧桥夹具，不能作为新作品 pet-kit 调用、权限或真实联机证据。
 
 模板中的 `__PET_SDK__`、`__PET_BRIDGE__`、`__GAME_CODE__` 是必需的装配位置；标题、简介和样式标记可以按你设计的布局保留或删除。不要删除装配位置后假设构建器仍会自动注入相应能力。
 

@@ -26,6 +26,8 @@ node install.mjs --to /path/to/your/codex/skills
 
 也可以提出射击、赛车、合作闯关等玩法。技能先澄清必要规则，已授权自行设计时直接展开。新作品默认参考 ShunyuYao 的赛车、坦克、水球、颜料、大乱斗等 3D 游戏，具体入口见 [游戏参考](create-pet-game/references/3d-game-reference.md)；用户明确要求 2D 时优先遵从。起始工程和包内 2D 示例只用于桥接/打包回归，不限制画面或玩法。
 
+新作品实际调用公共 [pet-kit](create-pet-game/references/pet-kit.md) 的统一 Room/Looks 抽象，固定版本与源码摘要、导出副本并离线打包。制作时由作品工程补齐公共包接线/构建，安装本 skill 不会自动下载 pet-kit；玩家仍只需 HTML。公共包不代替玩法与 3D 渲染，旧桥夹具不与它同时运行。
+
 角色会在大厅及玩法中显示，支持 2D 代表姿势与兼容 rat-doll v2 数据。随包组件将实时数据转为正面 PNG；完整 3D 场景和连续骨架动作需在作品里另行实现并内联，不是切换 `character3d:true` 即可。读取失败提示并重试，复杂游戏先明确小游戏范围。
 
 完成后取得一个 `.html` 文件。可以用普通浏览器预览，但真实联机需要双方运行支持 HTML/work SDK v2、`sessions:connect` 和作品邀请的桌宠客户端。技能不会安装或升级桌宠；这里不承诺未经验证的最低发布版本。

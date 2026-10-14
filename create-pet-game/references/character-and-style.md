@@ -17,7 +17,13 @@
 
 躲猫猫的原创游戏代码保留版权，本包没有复制它的游戏实现。随附 3D 组件来自另一个 MIT 公共项目 [pet-ragdoll-renderer](https://github.com/ShunyuYao/pet-ragdoll-renderer)，许可及修改见 `assets/character/NOTICE.md`。
 
-## PNG 姿势模式：使用配套读取器
+## 新作品优先公共形象抽象
+
+按 [pet-kit 接入](pet-kit.md#统一形象入口) 调用 `Looks.currentPetDriver(pet.character)` / `realtimeDriver` 统一形象，再交给 Room 交换。公共读取/校验/缓存不代替作品 3D 渲染与动作；若玩法确需额外姿势，用已授权 SDK 补充读取，不另起素材传输循环。
+
+## PNG 姿势模式：旧桥配套读取器
+
+以下是原 starter / 旧作品的兼容路径，不作为新作品默认形象接线。迁移后不要同时调用 Room 与 `shareCharacter` 传相同资源。
 
 构建器会将 `PetCharacter` 与可选的 `PetDollSprite` 放在 bridge 前，成品仍是单个 HTML。`character3d:true` 默认启用兼容实时数据转 PNG 的支持；只有用户明确只需要 2D 时，才在 game.json 配置 `character3d:false` 缩小文件。这个开关不选择 3D 游戏场景，不提供连续骨架动作；实时 3D 场景另按游戏参考实现自己的适配和离线打包。
 

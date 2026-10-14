@@ -1,6 +1,6 @@
 ---
 name: create-pet-game
-description: 用 Codex 按用户玩法需求制作可导入桌宠的单文件 HTML 小游戏，参考 ShunyuYao 的 3D 游戏，支持 pet SDK 角色读取、双人局域网邀请联机与授权后的产品目录接入。用于生成、改造、打包、验证和导入桌宠游戏；独立制作不需要桌宠源码，不把玩法限制为固定模板。
+description: 用 Codex 按用户玩法需求制作可导入桌宠的单文件 HTML 小游戏，参考 ShunyuYao 的 3D 游戏，复用公共 pet-kit 房间与形象抽象，支持双人局域网邀请联机与授权后的产品目录接入。用于生成、改造、打包、验证和导入桌宠游戏；独立制作不需要桌宠源码，不把玩法限制为固定模板。
 ---
 
 # 桌宠 HTML 游戏制作
@@ -11,11 +11,11 @@ description: 用 Codex 按用户玩法需求制作可导入桌宠的单文件 HT
 
 1. 明确用户想玩的核心规则。只对尚不明确、会改变玩法的点给出 2–3 个选项（例如游戏类型、视角、胜负规则、合作/对战和美术风格）。当前 Codex 有提问选择工具就使用；没有时在对话中列选项并等待回答。不要调用桌宠 Agent 专用的 `ask_user_choice`。已经明确的偏好不重复问。
 2. 默认按双人局域网制作。读 [SDK 契约](references/desktop-pet-sdk.md)、[角色与风格](references/character-and-style.md) 和 [ShunyuYao 游戏参考](references/3d-game-reference.md)，按玩法选相关的公开源码。默认参考这些项目的 3D 场景/布偶呈现；用户明确要求 2D 时遵从。**不要以本仓库自己生成的 2D examples 或计分 starter 作为新作品的视觉/玩法依据。** 不需要克隆桌宠宿主。若用户指定复杂商业游戏，说明可以实现的小游戏规模与取舍，保留其核心玩法；不要擅自换成固定玩法。
-3. 用 `node <skill>/scripts/init-game.mjs <新目录> --id <小写游戏ID> --title <标题>` 建立独立项目。`<skill>` 指当前 SKILL.md 所在目录，不是某台机器的固定路径。
+3. 用 `node <skill>/scripts/init-game.mjs <新目录> --id <小写游戏ID> --title <标题>` 建立独立项目。`<skill>` 指当前 SKILL.md 所在目录，不是某台机器的固定路径。新游戏必须读 [公共 pet-kit 接入](references/pet-kit.md)，固定已核对的源码版本，导出到作品的 `vendor/pet-kit`，通过公开 `Room` / `Looks` 入口复用房间、准备、事件、状态流、时钟、预算与形象交换。起始工程尚未自动接入 pet-kit，需替换旧桥调用并自行 bundle；不要同时启动两套会话轮询。每次构建先跑固定副本校验，不在游戏里修改公共层。
 4. 实现用户的游戏。默认让当前桌宠成为游戏中的完整可辨认角色；必须有大厅预览、读取失败原因与重试，不以通用圆点代替。按选定参考重做场景、相机、道具与动作，不因射击玩法自动套深色军事界面。起始工程只提供角色、准备、状态同步和重开的接线，必须替换其规则/画面。`character3d:true` 仅启用随包的 3D→PNG 读取器，**不等于 3D 场景或实时骨架动作**；需要完整 3D 时在作品项目中构建并内联场景渲染与兼容角色适配。保留桥接边界，不强迫不同玩法采用同一相机/引擎。实时游戏另读 [联机设计](references/multiplayer.md) 与 [大乱斗/赛车联机修复](references/network-lessons.md)，落实客人自身校正、远端权威时钟、资源重传预算和恢复状态的相关检查。
    用户还要求制作/使用自定义形象时，读 [自定义形象接入](references/appearance-import.md)，完成已授权的形象包转换、产品外观库导入与换上，再验证游戏读取该外观。游戏、形象分别交付与验收；仅要求游戏时直接读取现有桌宠，不额外生成新角色。
 5. 生成的作品只能通过 `window.pet` 获得宿主授权能力；不要访问宿主文件、Node、账号 token、原始 IPC。不要在成品里调用 Codex 工具，也不要内嵌模型密钥。运行时脚本、样式和必要素材都随文件内联，不依赖 CDN 或作者电脑的路径。
-6. 执行 `node <skill>/scripts/build-game.mjs <项目目录> <输出.html>`，再执行 `node <skill>/scripts/validate-game.mjs <输出.html>`。改动后重建，避免源码与交付 HTML 不一致。检查失败后修正根因再重跑，不为了绿灯删除有效断言。
+6. 先校验 pet-kit 副本并将作品模块/公共包离线 bundle 为 `game.js`，再执行 `node <skill>/scripts/build-game.mjs <项目目录> <输出.html>` 和 `node <skill>/scripts/validate-game.mjs <输出.html>`。保留 pet-kit MIT 许可、版本和源码摘要。改动后重建，避免源码与交付 HTML 不一致。检查失败后修正根因再重跑，不为了绿灯删除有效断言。
 7. 按 [验收方法](references/testing.md) 验证真实操作、胜负、再开、断线和关闭。`scripts/browser-smoke.mjs` 可在安装了 Chrome 的制作环境进行隔离无界面浏览器预览检查；它不是桌宠 SDK 或真实 LAN 测试。没有兼容桌宠时照样完成制作和浏览器检查，并明确宿主联机尚待验证，不把缺环境记成通过。
 8. 生成一张来自实际游戏画面的封面；按 [产品导入流程](references/product-import.md) 用 `scripts/prepare-vibe-import.mjs` 准备 HTML、封面、目录条目与字节回执。用户要求「放到产品 / 传 vibe / 逗一下」且提供可访问的宿主检出时，继续完成已授权的目录登记、资源接入、热刷新及真实入口验证；不要在交付 HTML 后停止。没有宿主时交付导入材料和具体待办，不声称已经导入。
 9. 交付 HTML 路径、玩法/按键、产品入口、实际测试结果和未覆盖项。无需把源码目录一并发给玩家；可另保留源码供修改。导入本机不等于允许对好友发送、公开发布、推送或宿主发版；这些操作须有对应用户授权。
@@ -23,6 +23,7 @@ description: 用 Codex 按用户玩法需求制作可导入桌宠的单文件 HT
 ## 联机必须成立的条件
 
 - HTML 的 `pet-sdk` 声明与实际 API 使用一致；双人 `interaction.transport` 为 `lan`。
+- 默认调用公共 pet-kit，不按每款游戏重写房间/传输底座；玩法裁决、预测/插值与业务确认由作品实现。公开参考游戏可能早于当前公共版本，不能以复制旧网络实现替代复用。确有公共能力缺口时核对并说明边界，优先在 pet-kit 修复/扩展后重新导出，而不是暗中 fork 副本。
 - 浏览器双击 HTML 是本地预览。宿主中未绑定邀请也只是预览，不能伪装成两人已连接。
 - 真实联机从宿主的“发送并一起玩”邀请进入；双方使用同一份 HTML，接受邀请和能力授权。没有固定服务器地址或 IP 输入步骤。
 - 一方裁定规则和胜负，另一方发送意图。双方显示同一结果；不能各自运行互不相干的计时器或计分。
@@ -32,6 +33,7 @@ description: 用 Codex 按用户玩法需求制作可导入桌宠的单文件 HT
 ## 配套文件
 
 - `references/desktop-pet-sdk.md`：本包必须遵守的 HTML/work SDK 快照及能力探测。
+- `references/pet-kit.md`：公共包的固定源码、公开 Room/Looks 入口、版本校验、离线打包和作品职责；新游戏默认接入。
 - `references/character-and-style.md`：2D/3D 当前形象、场景呈现、素材交换与风格选择。
 - `references/3d-game-reference.md`：作者的赛车、坦克、水球、颜料、大乱斗、躲猫猫；按玩法选源码，区分真实场景 3D 与姿势转图片。
 - `references/product-import.md`：完成游戏后接入「传 vibe → 逗 TA 一下 → 游戏」，资源与目录原子发布、热加载及实际发送验收。
@@ -39,5 +41,5 @@ description: 用 Codex 按用户玩法需求制作可导入桌宠的单文件 HT
 - `references/multiplayer.md`：不同玩法如何使用联机通道；与模板无关。
 - `references/network-lessons.md`：作者最近修复的自身回拉、远端停跳、ACK 时间线、形象重传/乱序与准备恢复；按失败路径选择实现与真实视角验收。
 - `references/testing.md`：分层验收与通用工具命令。
-- `assets/starter/`：可离线构建的技术示例和可复用的 `pet-bridge.js`。
+- `assets/starter/`：可离线构建的旧桥技术夹具；新游戏按 pet-kit 指南替换接线。
 - `scripts/`：只使用 Node.js 22+ 内置模块，无桌宠私有依赖。

@@ -15,7 +15,7 @@
 | [pet-brawl](https://github.com/ShunyuYao/pet-brawl/tree/ccd0acab497441ae8e35fc221a26345cdb4ccb67) | 侧视平台规则、3D 场景/骨架动作、武器姿势与受击翻滚；本地预测、客人自身绘制校正和远端平滑。适合角色动作、跳跃、击退。侧视规则不等于角色只能画成 2D。 | `src/scene.js`、`avatars.js`、`poses.js`；`game/match.cjs`、`net.cjs`、`local-motion.cjs`、`remote-motion.cjs` |
 | [pet-hide-duel](https://github.com/ShunyuYao/pet-hide-duel/tree/276d0204d5211c4318cdc7b2cf563080e565be87) | 可交互的 3D 摆姿势；确认后固定正面图，遮挡和命中共用轮廓。适合需要姿势编辑或轮廓公平的玩法，**不是连续 3D 场景模板**。 | `game/doll-editor.mjs`、`doll-pose.mjs`、`doll-assets.mjs`、`client.js` |
 
-借鉴公共结构时分开看 [pet-kit](https://github.com/ShunyuYao/pet-kit/tree/c30592f1656438a72b165e3d00d609519454808a) 的 `src/room.js`（会话、确认、预算）和 `src/looks.js`（当前形象及角色数据）。骨架、头部与服装来源见 [pet-ragdoll-renderer](https://github.com/ShunyuYao/pet-ragdoll-renderer/tree/73ce21b3d8d7f7398b1d389329a6c65cb69ee2ee)。它们是公共素材/代码契约参考，不要求玩家安装这些制作工具。
+新游戏默认实际调用公共 [pet-kit](https://github.com/ShunyuYao/pet-kit/tree/c30592f1656438a72b165e3d00d609519454808a) 的统一抽象，按 [接入指南](pet-kit.md) 固定副本并使用公开 `index.js` / `looks.js`；内部 `src/room.js` 可核对实现，不是作品应直接导入的入口。骨架、头部与服装来源见 [pet-ragdoll-renderer](https://github.com/ShunyuYao/pet-ragdoll-renderer/tree/73ce21b3d8d7f7398b1d389329a6c65cb69ee2ee)。作品离线打包所用公共代码/素材，玩家不需要安装制作工具。
 
 联机实现还须参考 [大乱斗与赛车的实际修复](network-lessons.md)：10-14 的自身回拉与远端停跳，以及之前的 ACK 时间线、重复传形象、晚加入/乱序和准备恢复。公共套件快照与作品自己的 vendor 版本分别核对，不能将索引中的 pet-kit 提交当成所有游戏当前使用的版本。
 
