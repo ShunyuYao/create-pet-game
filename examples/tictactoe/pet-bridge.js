@@ -9,7 +9,12 @@
   const bytes = value => new TextEncoder().encode(JSON.stringify(value)).length;
   const token = value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/.test(value);
   function create(options = {}) {
-    const sdk = options.sdk || root.pet;
+    const originalSdk = options.sdk || root.pet;
+    let permissionPending;
+    const sdk = originalSdk?.capabilities?.request ? {...originalSdk,capabilities:{...originalSdk.capabilities,
+      request:args=>permissionPending||(permissionPending=Promise.resolve(originalSdk.capabilities.request(args)).finally(()=>{permissionPending=null;}))
+    }} : originalSdk;
+    const characters = root.PetCharacter || (typeof module === 'object' && module.exports ? require('./pet-character.js') : null);
     let context = null, mode = 'preview', status = 'idle', cursor = 0, epoch = 0;
     let disposed = false, started = false, connecting, timer, flushing = false, nextSend = 0;
     const queued = new Map();
@@ -51,9 +56,16 @@
     async function event(e) {
       if (e.type === 'closed') { disposed = true; clearTimeout(timer); queued.clear(); setStatus('closed'); return; }
       if (e.type === 'resync_required') { await resync(); return; }
+      if (e.type === 'transfer' && e.purpose === 'game.character.v1') {
+        const asset = await sdk.sessions.readTransfer({transferId:e.transferId});
+        if(asset.purpose!=='game.character.v1'||asset.contentType!=='application/octet-stream'||asset.byteLength>900*1024)throw Error('invalid_character_transfer');
+        const data=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(asset.dataBase64),c=>c.charCodeAt(0))));
+        validateCharacterPacket(data);
+        await call('onCharacter', data); await call('onPortrait', data.poses[0].dataUrl); return;
+      }
       if (e.type === 'transfer' && e.purpose === 'game.portrait.v1') {
         const asset = await sdk.sessions.readTransfer({ transferId: e.transferId });
-        if (asset.purpose !== 'game.portrait.v1' || asset.contentType !== 'image/png' || asset.byteLength > 128 * 1024) throw Error('invalid_portrait');
+        if (asset.purpose !== 'game.portrait.v1' || asset.contentType !== 'image/png' || asset.byteLength > 256 * 1024) throw Error('invalid_portrait');
         await call('onPortrait', 'data:image/png;base64,' + asset.dataBase64); return;
       }
       if (e.type === 'message') {
@@ -115,23 +127,43 @@
       return sdk.sessions.send({ lane: 'reliable', type, payload, messageId: messageId || root.crypto.randomUUID() });
     }
     async function readCharacter() {
-      if (!sdk?.character?.getCurrent) return null;
-      return sdk.character.getCurrent({ states: ['idle'] });
+      if (disposed) throw Error('session_closed');
+      if(!characters)throw Error('character_helper_missing');
+      const result=await characters.read({sdk,renderRealtime:options.renderRealtime||root.PetDollSprite?.render});
+      if(disposed)throw Error('session_closed');
+      return result;
+    }
+    function validateCharacterPacket(data) {
+      if(data?.version!==1||typeof data.name!=='string'||data.name.length>256||!Array.isArray(data.poses)||data.poses.length<1||data.poses.length>3)throw Error('invalid_character_transfer');
+      const ids=new Set();
+      for(const p of data.poses){
+        if(!['idle','walk','greet'].includes(p.id)||ids.has(p.id)||typeof p.dataUrl!=='string'||p.dataUrl.length>300000||!/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(p.dataUrl))throw Error('invalid_character_transfer');
+        ids.add(p.id);const bytes=Uint8Array.from(atob(p.dataUrl.split(',')[1]),c=>c.charCodeAt(0));
+        if(bytes.length<24||![137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v))throw Error('invalid_character_transfer');
+        const view=new DataView(bytes.buffer);if(view.getUint32(16)!==256||view.getUint32(20)!==256)throw Error('invalid_character_dimensions');
+      }
+    }
+    async function shareCharacter(character) {
+      if(disposed||status!=='connected')throw Error('peer_not_connected');
+      const current=await characters.normalize(character||await readCharacter());
+      const data={version:1,name:current.name,poses:current.poses.map(p=>({id:p.id,dataUrl:p.dataUrl}))};
+      validateCharacterPacket(data);const bytes=new TextEncoder().encode(JSON.stringify(data));
+      if(bytes.length>900*1024)throw Error('character_transfer_too_large');
+      let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
+      if(disposed||status!=='connected')throw Error('peer_not_connected');
+      return sdk.sessions.transfer({purpose:'game.character.v1',contentType:'application/octet-stream',dataBase64:btoa(binary)});
     }
     async function sharePortrait(character) {
-      if (status !== 'connected') return false;
-      const current = character || await readCharacter();
-      const image = new Image(); image.src = current?.poses?.[0]?.dataUrl || ''; await image.decode();
-      const canvas = document.createElement('canvas'); canvas.width = canvas.height = 96;
-      const scale = Math.min(96 / image.naturalWidth, 96 / image.naturalHeight);
-      canvas.getContext('2d').drawImage(image, (96-image.naturalWidth*scale)/2, (96-image.naturalHeight*scale)/2, image.naturalWidth*scale, image.naturalHeight*scale);
-      const dataBase64 = canvas.toDataURL('image/png').split(',')[1];
-      if (dataBase64.length > 175000) throw Error('portrait_too_large');
-      return sdk.sessions.transfer({ purpose: 'game.portrait.v1', contentType: 'image/png', dataBase64 });
+      if(disposed||status!=='connected')throw Error('peer_not_connected');
+      const current=await characters.normalize(character||await readCharacter());
+      const dataBase64=current.poses[0].dataUrl.split(',')[1];
+      if(dataBase64.length>350000)throw Error('portrait_too_large');
+      if(disposed||status!=='connected')throw Error('peer_not_connected');
+      return sdk.sessions.transfer({purpose:'game.portrait.v1',contentType:'image/png',dataBase64});
     }
     function dispose() { disposed = true; clearTimeout(timer); queued.clear(); setStatus('closed'); }
     async function leave() { const wasSession = mode === 'session'; dispose(); return wasSession ? sdk.sessions.leave() : { released: true, peerAcknowledged: false }; }
-    return { connect, latest, reliable, readCharacter, sharePortrait, leave, dispose, snapshot };
+    return { connect, latest, reliable, readCharacter, shareCharacter, sharePortrait, leave, dispose, snapshot };
   }
   return Object.freeze({ create });
 });

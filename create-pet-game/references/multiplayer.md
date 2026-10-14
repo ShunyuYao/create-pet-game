@@ -33,7 +33,7 @@ await link.reliable('game.ready',{round});
 
 起点示例每 350ms 重发累积 count/ready；房主快照中的 seen/ready 是业务确认，新 round 会清空旧输入。它适用于这个小计分示例；独立回合动作更适合上面的 reliable + actionId + 确认/重试设计。
 
-建议一个状态 key、一个输入 key。不要把人物像素/完整角色资源每帧传输。`readCharacter()` 读取本人当前 idle 图；`sharePortrait()` 在连接后一次缩略、发送。收到 `onPortrait(dataUrl)` 可作为对方头像。这不是完整 3D 模型同步。
+建议一个状态 key、一个输入 key。不要把人物像素/完整角色资源每帧传输。`readCharacter()` 独立读取当前 2D 姿势，或经配套适配器渲染当前 3D 外观。用 `PetCharacter.normalize()` 统一裁剪，再由 `shareCharacter()` 通过 `game.character.v1` 素材传输 1–3 张 PNG；`onCharacter` 用于场景角色。旧 `sharePortrait/onPortrait` 保留单图兼容。这里传渲染后的帧，不发送完整 3D 资源，不是连续 3D 动画同步。
 
 ## 生命周期
 

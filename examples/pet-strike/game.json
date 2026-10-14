@@ -1,0 +1,13 @@
+{
+  "title": "桌宠突击",
+  "description": "带着你的桌宠，来一场纸板掩体对决。",
+  "protocol": {
+    "id": "pet-strike",
+    "version": 2
+  },
+  "permissions": [
+    "character:read",
+    "sessions:connect"
+  ],
+  "character3d": true
+}

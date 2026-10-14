@@ -9,10 +9,10 @@ description: 用 Codex 按用户玩法需求制作可导入桌宠的单文件 HT
 
 ## 从需求到可玩的作品
 
-1. 明确用户想玩的核心规则。只对尚不明确、会改变玩法的点给出 2–3 个选项（例如视角、胜负规则、合作/对战）。当前 Codex 有提问选择工具就使用；没有时在对话中列选项并等待回答。不要调用桌宠 Agent 专用的 `ask_user_choice`。已经明确的偏好不重复问。
-2. 默认按双人局域网制作。读 [SDK 契约](references/desktop-pet-sdk.md)。不需要克隆任何桌宠仓库。若用户指定复杂商业游戏，说明可以实现的小游戏规模与取舍，保留其核心玩法；**不要擅自换成另一个固定玩法**。
+1. 明确用户想玩的核心规则。只对尚不明确、会改变玩法的点给出 2–3 个选项（例如游戏类型、视角、胜负规则、合作/对战和美术风格）。当前 Codex 有提问选择工具就使用；没有时在对话中列选项并等待回答。不要调用桌宠 Agent 专用的 `ask_user_choice`。已经明确的偏好不重复问。
+2. 默认按双人局域网制作。读 [SDK 契约](references/desktop-pet-sdk.md) 和 [角色与风格](references/character-and-style.md)。不需要克隆任何桌宠仓库。若用户指定复杂商业游戏，说明可以实现的小游戏规模与取舍，保留其核心玩法；**不要擅自换成另一个固定玩法**。
 3. 用 `node <skill>/scripts/init-game.mjs <新目录> --id <小写游戏ID> --title <标题>` 建立独立项目。`<skill>` 指当前 SKILL.md 所在目录，不是某台机器的固定路径。
-4. 实现用户的游戏。起始工程的计分按钮只是演示角色、准备、状态同步和重开，必须替换为用户要求的规则/画面。Canvas、DOM、内联 SVG 或已打包的 WebGL 库均可；保留桥接边界即可，不强迫所有游戏采用同一游戏引擎。实时游戏另读 [联机设计](references/multiplayer.md)。
+4. 实现用户的游戏。默认让当前桌宠成为游戏中的完整可辨认角色；必须有大厅预览、读取失败原因与重试，不以通用圆点代替。风格未定时提供原作暖纸板/玩具感等选项，不能因射击玩法自动套深色军事界面。起始工程的计分按钮只是演示角色、准备、状态同步和重开，必须替换为用户要求的规则/画面。Canvas、DOM、内联 SVG 或已打包的 WebGL 库均可；保留桥接边界即可，不强迫所有游戏采用同一游戏引擎。实时游戏另读 [联机设计](references/multiplayer.md)。
 5. 生成的作品只能通过 `window.pet` 获得宿主授权能力；不要访问宿主文件、Node、账号 token、原始 IPC。不要在成品里调用 Codex 工具，也不要内嵌模型密钥。运行时脚本、样式和必要素材都随文件内联，不依赖 CDN 或作者电脑的路径。
 6. 执行 `node <skill>/scripts/build-game.mjs <项目目录> <输出.html>`，再执行 `node <skill>/scripts/validate-game.mjs <输出.html>`。改动后重建，避免源码与交付 HTML 不一致。检查失败后修正根因再重跑，不为了绿灯删除有效断言。
 7. 按 [验收方法](references/testing.md) 验证真实操作、胜负、再开、断线和关闭。`scripts/browser-smoke.mjs` 可在安装了 Chrome 的制作环境进行隔离无界面浏览器预览检查；它不是桌宠 SDK 或真实 LAN 测试。没有兼容桌宠时照样完成制作和浏览器检查，并明确宿主联机尚待验证，不把缺环境记成通过。
@@ -30,6 +30,7 @@ description: 用 Codex 按用户玩法需求制作可导入桌宠的单文件 HT
 ## 配套文件
 
 - `references/desktop-pet-sdk.md`：本包必须遵守的 HTML/work SDK 快照及能力探测。
+- `references/character-and-style.md`：2D/3D 当前形象、场景呈现、素材交换与风格选择。
 - `references/multiplayer.md`：不同玩法如何使用联机通道；与模板无关。
 - `references/testing.md`：分层验收与通用工具命令。
 - `assets/starter/`：可离线构建的技术示例和可复用的 `pet-bridge.js`。

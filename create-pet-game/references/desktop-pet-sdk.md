@@ -1,6 +1,6 @@
 # HTML/work SDK 契约快照
 
-核对日期：2026-10-13。以下是桌宠已实现的 HTML 作品能力，部分接口仍为 experimental。**不以应用版本号推测支持情况**；页面运行时探测 `window.pet` 和方法是否存在，必要时查询 capability。旧宿主不支持时显示明确提示，而不是降级成假联机。本包不包含宿主源码、安装包或私有服务地址。
+核对日期：2026-10-14。以下是桌宠已实现的 HTML 作品能力，部分接口仍为 experimental。**不以应用版本号推测支持情况**；页面运行时探测 `window.pet` 和方法是否存在，必要时查询 capability。旧宿主不支持时显示明确提示，而不是降级成假联机。本包不包含宿主源码、安装包或私有服务地址。
 
 ## 最小单文件声明
 
@@ -27,6 +27,14 @@ const character = await pet.character.getCurrent({states:['idle']});
 ```
 
 先请求 `idle`，不要假设每个角色都有 walk/greet。数据只含当前角色请求姿势的图像；不要把制作人的私有角色包打进公开作品。能力缺失或 `CHARACTER_STATE_UNAVAILABLE` 要有可见降级说明。
+
+### 实时换装外观（上版遗漏的接口）
+
+`await pet.character.getRealtime()` 使用同一个 `character:read` 权限。先探测方法和 `pet.capabilities.query('character.getRealtime')`。
+
+普通 2D 角色返回 `null`；支持的实时形象返回 `{key,name,signature,renderer,dataVersion,data,assets}`。`assets[id]` 为 `{contentType,dataBase64}`，没有路径，也不是可直接给 img 的 URL。当前已核对 `rat-doll-renderer` 的数据 v2：`data.person`、`headScale`、`garments.top/bottom.kind` 和各素材键；解析与渲染使用包内适配器。详见 [角色与风格](character-and-style.md)。
+
+`getCurrent` 与 `getRealtime` 的 key 必须一致；读到不同角色说明读取期间形象变更，应重试。此接口不会授予 `pet.render`、宿主渲染控制或任意模型加载权限。不要在 HTML 里使用插件专用的 `appearance.apply` 等接口。
 
 `window.desktopGame?.exit()` 只关闭自己的作品窗口。离开对局先 `await pet.sessions.leave()`；页面关闭后宿主也会回收会话。当前默认房主关窗会结束该局，没有自动房主迁移。
 

@@ -1,0 +1,3 @@
+create-pet-game/assets/character/vendor/** linguist-vendored=true -whitespace
+create-pet-game/assets/character/pet-doll-sprite.js linguist-generated=true -whitespace
+examples/*.html linguist-generated=true -whitespace
