@@ -4,13 +4,17 @@
 
 ```sh
 node /path/to/create-pet-game/scripts/init-game.mjs ./my-game --id my-pet-game --title "我的游戏"
-# 按需求修改 my-game/game.js、style.css、index.template.html、game.json
+# 按需求实现玩法，按 pet-kit 指南导出/校验公共包并 bundle 为 game.js
 node /path/to/create-pet-game/scripts/build-game.mjs ./my-game ./dist/my-game.html
 node /path/to/create-pet-game/scripts/validate-game.mjs ./dist/my-game.html
 node /path/to/create-pet-game/scripts/browser-smoke.mjs ./dist/my-game.html --out ./evidence
 ```
 
 工具按自身位置找随包文件，不依赖当前工作目录、作者路径、密钥或桌宠仓库。将输出 HTML 移到别的目录再检查，确认没有遗漏相对路径资产。`build-game` 不安装依赖；选择第三方引擎时，在作品项目中安装、离线打包并保留许可。
+
+新作品执行 [pet-kit 固定副本与验收](pet-kit.md)：构建前 `verify.cjs.check(gameDir)`，公开入口 bundle、MIT 许可、上游 SHA 与副本摘要；实际只运行一套 Room。旧 starter 的浏览器/协议通过只能证明旧桥夹具，不能作为新作品 pet-kit 调用、权限或真实联机证据。
+
+采用可选 Motion 时，另验原始样本时间不被转发重写、同来源单调时钟、重复/乱序与旧局拒收、有界外推、传送/暂停/控制权的重置、规则值隔离，以及自己控制的角色没有新增缓冲延迟。公共包 `test:motion` 是工具证据；真实双端完整玩法仍按下方分层验收，不能只看曲线变平滑。
 
 模板中的 `__PET_SDK__`、`__PET_BRIDGE__`、`__GAME_CODE__` 是必需的装配位置；标题、简介和样式标记可以按你设计的布局保留或删除。不要删除装配位置后假设构建器仍会自动注入相应能力。
 
@@ -25,6 +29,12 @@ node /path/to/create-pet-game/scripts/browser-smoke.mjs ./dist/my-game.html --ou
 角色呈现另按 [角色与风格](character-and-style.md) 验收：真实形象在大厅和玩法画面都可见、透明边距裁剪、角色身份正确、拒绝授权/读取失败可重试、3D 外观不是普通 idle 占位帧。
 
 用户规则应落成可观察断言：胜负、暂停/恢复、无效操作、边界位置、重复/迟到动作。只做“页面有按钮”“桥调用成功”不够。
+
+实时联机另执行 [修复案例中的验收路径](network-lessons.md#必须落成作品验收的路径)：双方实际按键，分别采集客人自身与远端的最终绘制轨迹，正常/成批收包、停止/转向、精确动作次数、短断线/重复重连、准备恢复与素材预算都要有对应证据。模拟限额与真实 SDK 的统计窗口一致，失败也释放全部会话/计时器；只检查 FPS 或预测帧号不能证明无回拉。单列有探针测量和无探针最终 HTML 的摘要/入口检查。
+
+采用 [作者 3D 游戏参考](3d-game-reference.md) 时，另验证真实场景、相机与逐帧角色动作；随包 `character3d:true` 只启用实时外观转 PNG，不能作为连续 3D 场景的通过证据。参考源码被读取与参考游戏被重新测试是两件事。
+
+用户要求直接放入产品时，继续走 [产品导入流程](product-import.md)：最终字节/封面、目录与全量回执、真实入口及实际发送，具备热加载的实例还须验证同一已打开列表的更新。准备导入材料不等于完成登记。
 
 点击前检查按钮/收件人等关键区域在窗口内、不被遮挡；键盘能触发视口外按钮不代表用户能点击。截图应在实际绘制完成后采集。
 

@@ -2,7 +2,11 @@
 
 默认把玩家当前桌宠作为游戏里的可辨认角色、棋子或驾驶员。大厅给足够大的形象预览，说明读取来源，提供“重新读取”；动作游戏里保留完整轮廓、原始比例和透明背景，不把大画布缩成难以辨认的 36px 小点，也不拿通用圆球或另画的猫替代成功读取的桌宠。
 
-## 原仓库的可复用约定
+## 默认参考与两种角色模式
+
+先按 [ShunyuYao 的游戏参考](3d-game-reference.md) 选择相关实现。默认采用作者游戏的 3D 场景/布偶方向，实时角色应在场景里建立骨架对象并应用动作。用户明确选择 2D，或玩法需要固定像素轮廓时，才采用下面的 PNG 姿势流程。不要把本仓库生成的 2D examples 当成默认视觉参考。
+
+## 固定姿势玩法的可复用约定
 
 已核对 [pet-hide-duel](https://github.com/ShunyuYao/pet-hide-duel/tree/276d0204d5211c4318cdc7b2cf563080e565be87) 的 `game/host.js`、`client.js`、`sessions.js`、`doll-assets.mjs` 与 `style.css`：
 
@@ -11,11 +15,17 @@
 - 先在大厅确认角色，再带入对局；邀请确定 host/guest，同一 HTML 内容摘要绑定双方。角色素材经 session transfer 交换，帧更新只传动作和状态。
 - 原作是暖纸张、纸板掩体、玩具感交互，大厅以桌宠展示为中心。它的藏匿轮廓/命中公平约束属于其玩法，不要强加给五子棋等其他游戏。
 
-上述仓库的原创游戏代码保留版权，本包没有复制它的游戏实现。随附 3D 组件来自另一个 MIT 公共项目 [pet-ragdoll-renderer](https://github.com/ShunyuYao/pet-ragdoll-renderer)，许可及修改见 `assets/character/NOTICE.md`。
+躲猫猫的原创游戏代码保留版权，本包没有复制它的游戏实现。随附 3D 组件来自另一个 MIT 公共项目 [pet-ragdoll-renderer](https://github.com/ShunyuYao/pet-ragdoll-renderer)，许可及修改见 `assets/character/NOTICE.md`。
 
-## 使用配套读取器
+## 新作品优先公共形象抽象
 
-构建器会将 `PetCharacter` 与可选的 `PetDollSprite` 放在 bridge 前，成品仍是单个 HTML。默认启用 3D 支持；只有用户明确只需要 2D 时，才在 game.json 配置 `character3d:false` 缩小文件。
+按 [pet-kit 接入](pet-kit.md#统一形象入口) 调用 `Looks.currentPetDriver(pet.character)` / `realtimeDriver` 统一形象，再交给 Room 交换。公共读取/校验/缓存不代替作品 3D 渲染与动作；若玩法确需额外姿势，用已授权 SDK 补充读取，不另起素材传输循环。
+
+## PNG 姿势模式：旧桥配套读取器
+
+以下是原 starter / 旧作品的兼容路径，不作为新作品默认形象接线。迁移后不要同时调用 Room 与 `shareCharacter` 传相同资源。
+
+构建器会将 `PetCharacter` 与可选的 `PetDollSprite` 放在 bridge 前，成品仍是单个 HTML。`character3d:true` 默认启用兼容实时数据转 PNG 的支持；只有用户明确只需要 2D 时，才在 game.json 配置 `character3d:false` 缩小文件。这个开关不选择 3D 游戏场景，不提供连续骨架动作；实时 3D 场景另按游戏参考实现自己的适配和离线打包。
 
 ```js
 // 与 link.connect() 分别处理错误；联机连接失败不应阻断本地形象读取。
@@ -55,7 +65,7 @@ void refreshPet();
 
 ## 风格选择
 
-用户未指定时，先给选择：①参考原作的暖纸板/玩具感（默认建议）；②清爽像素/街机；③用户指定参考。视角、玩法、风格是三个不同选择，不因“射击”自动改成黑底荧光军事界面，也不因“桌宠”就擅自绘制一只默认猫。
+用户未指定时，以相关作者游戏的 3D/玩具方向为起点；需要澄清时可提供该项目的场景方向、其他美术方向、用户指定参考。已经授权自行发散就直接设计，不重复询问。视角、玩法、风格是三个不同选择，不因“射击”自动改成黑底荧光军事界面，也不因“桌宠”就擅自绘制一只默认猫。
 
 采用原作方向时：暖米白底、低饱和苔绿与陶土色点缀、纸板/木制道具、柔和细描边、简短中文提示；主视觉留给玩家形象与场景。保持规则和角色辨识度，布局按玩法重做，不复制原作具体页面或暗中替换游戏类型。用户有明确风格偏好时优先遵从。
 
